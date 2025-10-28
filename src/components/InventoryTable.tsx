@@ -39,20 +39,23 @@ export const InventoryTable = ({ sarees }: InventoryTableProps) => {
   const uniqueTypes = [...new Set(sarees.map((s) => s.type))];
 
   return (
-    <Card className="p-6 shadow-card">
+    <Card className="p-6 shadow-elegant border-primary/20 bg-gradient-to-br from-white to-secondary/5">
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Inventory Dashboard
-        </h2>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-3xl animate-pulse-glow">📊</span>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
+            Inventory Dashboard
+          </h2>
+        </div>
 
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-primary animate-pulse-glow" />
             <Input
               placeholder="Search sarees..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 transition-smooth focus:shadow-elegant"
+              className="pl-10 transition-smooth focus:shadow-elegant border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -121,19 +124,19 @@ export const InventoryTable = ({ sarees }: InventoryTableProps) => {
             {filteredSarees.map((saree, index) => (
               <tr
                 key={saree.id}
-                className="border-b border-border hover:bg-muted/30 transition-smooth animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                className="border-b border-primary/10 hover:bg-primary/5 transition-bounce hover-lift animate-fade-in"
+                style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'backwards' }}
               >
                 <td className="py-3 px-4">
                   <img
                     src={saree.imageUrl}
                     alt={saree.name}
-                    className="w-16 h-16 object-cover rounded-lg shadow-sm"
+                    className="w-16 h-16 object-cover rounded-lg shadow-elegant hover-scale border-2 border-primary/20"
                   />
                 </td>
                 <td className="py-3 px-4 font-medium">{saree.name}</td>
                 <td className="py-3 px-4">
-                  <Badge variant="secondary" className="bg-secondary/20">
+                  <Badge variant="secondary" className="bg-gradient-secondary text-white hover-scale transition-bounce">
                     {saree.type}
                   </Badge>
                 </td>

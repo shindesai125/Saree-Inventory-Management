@@ -54,10 +54,13 @@ export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
   };
 
   return (
-    <Card className="p-6 shadow-card hover-scale">
-      <h2 className="text-2xl font-semibold mb-6 bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-        Sell Saree
-      </h2>
+    <Card className="p-6 shadow-elegant hover-lift border-primary/20 bg-gradient-to-br from-white to-accent/5">
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-3xl animate-pulse-glow">💰</span>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-accent via-primary to-accent bg-clip-text text-transparent animate-gradient">
+          Sell Saree
+        </h2>
+      </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
@@ -90,10 +93,10 @@ export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
 
         <Button
           onClick={handleSell}
-          className="w-full bg-green-600 hover:bg-green-700 text-white transition-smooth hover-glow"
+          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg py-6 hover-scale hover-glow transition-bounce animate-gradient shimmer shadow-elegant"
         >
-          <ShoppingBag className="mr-2 h-4 w-4" />
-          Sell Saree
+          <ShoppingBag className="mr-2 h-5 w-5" />
+          Sell Saree 🎉
         </Button>
       </div>
     </Card>

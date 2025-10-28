@@ -79,10 +79,13 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
   };
 
   return (
-    <Card className="p-6 shadow-card hover-scale">
-      <h2 className="text-2xl font-semibold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-        Add New Saree
-      </h2>
+    <Card className="p-6 shadow-elegant hover-lift border-primary/20 bg-gradient-to-br from-white to-primary/5">
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-3xl animate-pulse-glow">💎</span>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
+          Add New Saree
+        </h2>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Saree Name</Label>
@@ -160,10 +163,10 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
 
         <Button
           type="submit"
-          className="w-full gradient-primary hover-glow transition-smooth"
+          className="w-full gradient-primary text-white font-bold text-lg py-6 hover-scale hover-glow transition-bounce animate-gradient shimmer shadow-elegant"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Saree
+          <Plus className="mr-2 h-5 w-5" />
+          Add Saree ✨
         </Button>
       </form>
     </Card>

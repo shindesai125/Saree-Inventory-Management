@@ -52,20 +52,19 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-elegant">
+    <div className="min-h-screen gradient-mesh">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border shadow-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                Saree Inventory Manager
-              </h1>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-primary/10 shadow-elegant">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center gap-3 animate-fade-in-up">
+            <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center shadow-glow floating">
+              <Sparkles className="h-7 w-7 text-white" />
             </div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Saree Inventory Manager
+            </h1>
           </div>
+          <p className="text-center text-muted-foreground mt-2 text-sm animate-fade-in">✨ Your Elegant Boutique Assistant</p>
         </div>
       </header>
 
@@ -73,61 +72,61 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Low Stock Alert */}
         {sarees.some((s) => s.quantity < 5) && (
-          <div className="animate-fade-in">
+          <div className="animate-bounce-in" style={{ animationDelay: '0.1s', animationFillMode: 'backwards' }}>
             <LowStockAlert sarees={sarees} />
           </div>
         )}
 
         {/* Add Saree and Sell Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="animate-slide-in">
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.2s", animationFillMode: 'backwards' }}>
             <AddSareeForm onAddSaree={handleAddSaree} />
           </div>
-          <div className="animate-slide-in" style={{ animationDelay: "0.1s" }}>
+          <div className="animate-slide-in-right" style={{ animationDelay: "0.3s", animationFillMode: 'backwards' }}>
             <SellSareeSection sarees={sarees} onSell={handleSellSaree} />
           </div>
         </div>
 
         {/* Inventory Table */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <div className="animate-scale-in" style={{ animationDelay: "0.4s", animationFillMode: 'backwards' }}>
           <InventoryTable sarees={sarees} />
         </div>
 
         {/* Analytics */}
         {sarees.length > 0 && (
-          <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.5s", animationFillMode: 'backwards' }}>
             <AnalyticsCharts sarees={sarees} />
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border mt-16">
+      <footer className="bg-white/95 backdrop-blur-xl border-t border-primary/10 shadow-elegant mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center space-y-4">
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm font-medium">
               Powered by AI • Developed with ❤️ by{" "}
-              <span className="font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                 Sai Shinde
               </span>
             </p>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-6">
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center hover-scale hover-glow transition-smooth"
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center hover-scale hover-glow transition-bounce shadow-elegant"
               >
-                <Instagram className="h-5 w-5 text-white" />
+                <Instagram className="h-6 w-6 text-white" />
               </a>
               <a
                 href="https://wa.me/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center hover-scale hover-glow transition-smooth"
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center hover-scale hover-glow transition-bounce shadow-elegant"
               >
                 <svg
-                  className="h-5 w-5 text-white"
+                  className="h-6 w-6 text-white"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >

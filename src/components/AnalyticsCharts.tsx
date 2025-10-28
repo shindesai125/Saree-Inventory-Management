@@ -7,11 +7,11 @@ interface AnalyticsChartsProps {
 }
 
 const COLORS = [
-  "hsl(340, 65%, 55%)", // Primary
-  "hsl(270, 60%, 65%)", // Secondary
-  "hsl(45, 90%, 55%)",  // Accent
-  "hsl(320, 70%, 60%)", // Pink variant
-  "hsl(280, 65%, 70%)", // Purple variant
+  "hsl(335, 85%, 60%)", // Primary - Vibrant Rose Pink
+  "hsl(320, 75%, 70%)", // Secondary - Soft Pink
+  "hsl(350, 80%, 65%)", // Accent - Coral Pink
+  "hsl(340, 80%, 65%)", // Pink variant
+  "hsl(330, 70%, 75%)", // Light Pink variant
 ];
 
 export const AnalyticsCharts = ({ sarees }: AnalyticsChartsProps) => {
@@ -30,15 +30,18 @@ export const AnalyticsCharts = ({ sarees }: AnalyticsChartsProps) => {
   const stockData = sarees.map((saree) => ({
     name: saree.name.length > 15 ? saree.name.substring(0, 15) + "..." : saree.name,
     stock: saree.quantity,
-    fill: saree.quantity < 5 ? "hsl(0, 75%, 55%)" : "hsl(340, 65%, 55%)",
+    fill: saree.quantity < 5 ? "hsl(0, 85%, 60%)" : "hsl(335, 85%, 60%)",
   }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="p-6 shadow-card">
-        <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Sarees by Type
-        </h3>
+      <Card className="p-6 shadow-elegant hover-lift border-primary/20 bg-gradient-to-br from-white to-primary/5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-2xl animate-pulse-glow">📈</span>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
+            Sarees by Type
+          </h3>
+        </div>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -61,10 +64,13 @@ export const AnalyticsCharts = ({ sarees }: AnalyticsChartsProps) => {
         </ResponsiveContainer>
       </Card>
 
-      <Card className="p-6 shadow-card">
-        <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-          Stock Levels
-        </h3>
+      <Card className="p-6 shadow-elegant hover-lift border-primary/20 bg-gradient-to-br from-white to-secondary/5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-2xl animate-pulse-glow">📊</span>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-accent via-primary to-accent bg-clip-text text-transparent animate-gradient">
+            Stock Levels
+          </h3>
+        </div>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={stockData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
