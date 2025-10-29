@@ -11,8 +11,9 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
+    // regex-based alias for "@/" imports to reliably resolve on Windows and other platforms
+    alias: [
+      { find: /^@\//, replacement: path.resolve(__dirname, "src") + "/" },
+    ],
   },
 }));
