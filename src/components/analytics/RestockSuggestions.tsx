@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClients";
 import { Card } from "@/components/ui/card";
+import { format, subDays } from "date-fns";
 
 interface Saree {
   id: string;
@@ -6,25 +9,56 @@ interface Saree {
   type: string;
   price: number;
   quantity: number;
-  imageUrl?: string;
-  tags?: string[];
-  salesCount?: number; // optional if you track sales frequency
+}
+
+interface Sale {
+  saree_id: string;
+  quantity: number;
+  created_at: string;
 }
 
 export const RestockSuggestions = ({ sarees }: { sarees: Saree[] }) => {
-  // Thresholds
-  const LOW_STOCK_THRESHOLD = 5;
-  const FAST_SELLING_THRESHOLD = 10; // e.g. sold more than 10 recently
+  const [fastSellingIds, setFastSellingIds] = useState<string[]>([]);
 
-  // Filter sarees that need restocking
+  useEffect(() => {
+    const fetchFastSelling = async () => {
+      const last30Days = subDays(new Date(), 30).toISOString();
+
+      const { data, error } = await supabase
+        .from("sales")
+        .select("saree_id, quantity, created_at")
+        .gte("created_at", last30Days);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // Aggregate sales in last 30 days
+      const salesMap: Record<string, number> = {};
+      data?.forEach((sale: Sale) => {
+        salesMap[sale.saree_id] = (salesMap[sale.saree_id] || 0) + sale.quantity;
+      });
+
+      // Mark sarees as fast-selling if sold > 10 in last 30 days
+      const fast = Object.keys(salesMap).filter((id) => salesMap[id] > 10);
+      setFastSellingIds(fast);
+    };
+
+    fetchFastSelling();
+  }, []);
+
+  const LOW_STOCK_THRESHOLD = 5;
+
+  // Sarees that need restock
   const restockList = sarees.filter(
-    (s) => s.quantity < LOW_STOCK_THRESHOLD || (s.salesCount ?? 0) > FAST_SELLING_THRESHOLD
+    (s) => s.quantity < LOW_STOCK_THRESHOLD || fastSellingIds.includes(s.id)
   );
 
   if (restockList.length === 0) {
     return (
       <Card className="p-6 shadow-elegant border-primary/10 bg-gradient-to-br from-white to-emerald-50">
-        <h2 className="text-2xl font-bold mb-4 text-emerald-600">✅ All Good!</h2>
+        <h2 className="text-2xl font-bold mb-2 text-emerald-600">✅ All Good!</h2>
         <p className="text-muted-foreground">No sarees need urgent restocking right now.</p>
       </Card>
     );
