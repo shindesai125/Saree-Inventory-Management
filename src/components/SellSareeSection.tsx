@@ -16,12 +16,19 @@ import { toast } from "sonner";
 
 interface SellSareeSectionProps {
   sarees: Saree[];
-  onSell: (sareeId: string, quantity: number) => void;
+  onSell: (
+    sareeId: string,
+    quantity: number,
+    customerName: string,
+    sellingPrice: number
+  ) => void;
 }
 
 export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
   const [selectedSareeId, setSelectedSareeId] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [customerName, setCustomerName] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
 
   const handleSell = () => {
     if (!selectedSareeId) {
@@ -31,6 +38,7 @@ export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
 
     const saree = sarees.find((s) => s.id === selectedSareeId);
     const sellQuantity = parseInt(quantity);
+    const price = parseFloat(sellingPrice);
 
     if (!saree) return;
 
@@ -44,13 +52,26 @@ export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
       return;
     }
 
-    onSell(selectedSareeId, sellQuantity);
-    toast.success(`Successfully sold ${sellQuantity} ${saree.name}(s)!`, {
+    if (!customerName.trim()) {
+      toast.error("Please enter customer name");
+      return;
+    }
+
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid selling price");
+      return;
+    }
+
+    onSell(selectedSareeId, sellQuantity, customerName.trim(), price);
+
+    toast.success(`Sold ${sellQuantity} ${saree.name}(s) to ${customerName}!`, {
       description: `Remaining stock: ${saree.quantity - sellQuantity}`,
     });
 
     setQuantity("1");
     setSelectedSareeId("");
+    setCustomerName("");
+    setSellingPrice("");
   };
 
   return (
@@ -87,6 +108,29 @@ export const SellSareeSection = ({ sarees, onSell }: SellSareeSectionProps) => {
             min="1"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
+            className="transition-smooth focus:shadow-elegant"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="customerName">Customer Name</Label>
+          <Input
+            id="customerName"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="e.g., Priya Sharma"
+            className="transition-smooth focus:shadow-elegant"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sellingPrice">Selling Price (₹)</Label>
+          <Input
+            id="sellingPrice"
+            type="number"
+            value={sellingPrice}
+            onChange={(e) => setSellingPrice(e.target.value)}
+            placeholder="e.g., 6000"
             className="transition-smooth focus:shadow-elegant"
           />
         </div>

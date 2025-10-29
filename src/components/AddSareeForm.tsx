@@ -1,3 +1,4 @@
+// ...imports remain unchanged
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
+import { supabase } from "@/lib/supabaseClients";
 
 export interface Saree {
   id: string;
@@ -22,8 +24,6 @@ interface AddSareeFormProps {
 
 const generateAITags = (name: string, type: string): string[] => {
   const tags: string[] = [];
-  
-  // Type-based tags
   const typeMap: { [key: string]: string[] } = {
     Silk: ["Traditional", "Wedding", "Premium", "Handloom"],
     Cotton: ["Casual", "Comfortable", "Summer", "Daily Wear"],
@@ -32,11 +32,7 @@ const generateAITags = (name: string, type: string): string[] => {
     Kanjivaram: ["Bridal", "South Indian", "Pure Silk", "Heritage"],
   };
 
-  if (typeMap[type]) {
-    tags.push(...typeMap[type].slice(0, 2));
-  }
-
-  // Name-based tags
+  if (typeMap[type]) tags.push(...typeMap[type].slice(0, 2));
   if (name.toLowerCase().includes("bridal")) tags.push("Wedding");
   if (name.toLowerCase().includes("party")) tags.push("Party Wear");
   if (name.toLowerCase().includes("printed")) tags.push("Printed");
@@ -50,32 +46,56 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
   const [type, setType] = useState("");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [autoGenerateTags, setAutoGenerateTags] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setLoading(true);
+
+    let imageUrl = "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400";
+
+    if (file) {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("saree-images")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error("Image upload error:", uploadError.message);
+        alert("Failed to upload image");
+        setLoading(false);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("saree-images")
+        .getPublicUrl(fileName);
+
+      imageUrl = data.publicUrl;
+    }
+
     const tags = autoGenerateTags ? generateAITags(name, type) : [];
-    
+
     const newSaree: Saree = {
       id: Date.now().toString(),
       name,
       type,
       price: parseFloat(price),
       quantity: parseInt(quantity),
-      imageUrl: imageUrl || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400",
+      imageUrl,
       tags,
     };
 
     onAddSaree(newSaree);
-    
-    // Reset form
+
     setName("");
     setType("");
     setPrice("");
     setQuantity("");
-    setImageUrl("");
+    setFile(null);
+    setLoading(false);
   };
 
   return (
@@ -140,12 +160,12 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="imageUrl">Image URL (optional)</Label>
+          <Label htmlFor="file">Upload Image (optional)</Label>
           <Input
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
+            id="file"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="transition-smooth focus:shadow-elegant"
           />
         </div>
@@ -154,7 +174,9 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
           <Checkbox
             id="autoTags"
             checked={autoGenerateTags}
-            onCheckedChange={(checked) => setAutoGenerateTags(checked as boolean)}
+            onCheckedChange={(checked) =>
+              setAutoGenerateTags(checked as boolean)
+            }
           />
           <Label htmlFor="autoTags" className="text-sm cursor-pointer">
             Auto-generate tags with AI ✨
@@ -163,10 +185,11 @@ export const AddSareeForm = ({ onAddSaree }: AddSareeFormProps) => {
 
         <Button
           type="submit"
+          disabled={loading}
           className="w-full gradient-primary text-white font-bold text-lg py-6 hover-scale hover-glow transition-bounce animate-gradient shimmer shadow-elegant"
         >
           <Plus className="mr-2 h-5 w-5" />
-          Add Saree ✨
+          {loading ? "Adding..." : "Add Saree ✨"}
         </Button>
       </form>
     </Card>
