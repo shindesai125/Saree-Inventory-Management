@@ -1,26 +1,64 @@
-import { useState, useEffect } from 'react';
-import { supabase } from "@/lib/supabaseClients"; 
-import { Saree } from './AddSareeForm';
+// src/components/InventoryTable.tsx
+import React from "react";
+import { Saree } from "@/components/AddSareeForm";
 
-interface Props {
+type InventoryTableProps = {
   sarees: Saree[];
-}
-
-const InventoryTable = ({ sarees }: Props) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {sarees.map((saree) => (
-        <div key={saree.id} className="border rounded p-4 shadow">
-          <img src={saree.imageUrl} alt={saree.name} className="w-full h-40 object-cover mb-2" />
-          <h3 className="text-lg font-semibold">{saree.name}</h3>
-          <p>Type: {saree.type}</p>
-          <p>Price: ₹{saree.price}</p>
-          <p>Stock: {saree.quantity}</p>
-          <p className="text-sm text-gray-500">Tags: {saree.tags?.join(', ')}</p>
-        </div>
-      ))}
-    </div>
-  );
+  onEdit?: (s: Saree) => void;
+  onDelete?: (id: string) => void;
 };
 
-export default InventoryTable;
+export default function InventoryTable({ sarees, onEdit, onDelete }: InventoryTableProps) {
+  if (!sarees || sarees.length === 0) {
+    return (
+      <div className="mt-6 text-center text-gray-500">
+        No sarees in inventory yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto bg-white rounded-lg shadow-sm p-4 mt-6">
+      <table className="w-full text-sm">
+        <thead className="text-left text-xs uppercase text-gray-500">
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Tags</th>
+            <th className="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sarees.map((s) => (
+            <tr key={s.id} className="border-t">
+              <td className="py-2">{s.name}</td>
+              <td className="py-2">{s.type}</td>
+              <td className="py-2">{s.quantity}</td>
+              <td className="py-2">₹{s.price}</td>
+              <td className="py-2">{(s.tags || []).join(", ")}</td>
+              <td className="py-2 text-right space-x-2">
+                <button
+                  onClick={() => onEdit?.(s)}
+                  className="px-2 py-1 text-sm bg-yellow-100 rounded hover:bg-yellow-200"
+                >
+                  Edit
+                </button>
+
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(s.id)}
+                    className="px-2 py-1 text-sm bg-red-100 rounded hover:bg-red-200"
+                  >
+                    Delete
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
