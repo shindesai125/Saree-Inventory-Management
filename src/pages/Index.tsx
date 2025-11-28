@@ -3,27 +3,22 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClients";
 import AddSareeForm, { Saree } from "@/components/AddSareeForm";
 import InventoryGrid from "@/components/InventoryGrid";
-import InventoryTable from "@/components/InventoryTable";
 import { LowStockAlert } from "@/components/LowStockAlert";
 import { SellSareeSection } from "@/components/SellSareeSection";
 import { RestockSuggestions } from "@/components/analytics/RestockSuggestions";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { ProfitAnalytics } from "@/components/analytics/ProfitAnalytics";
+import { InvestmentSalesSummary } from "@/components/analytics/InvestmentSalesSummary";
 import { Sparkles } from "lucide-react";
 
-/**
- * Extend the imported Saree type with images (array of public URLs).
- * We keep the base Saree type from AddSareeForm for fields like id/name/price etc.
- */
-type SareeWithImages = Saree & { images?: string[] };
-
 const Index: React.FC = () => {
-  const [sarees, setSarees] = useState<SareeWithImages[]>([]);
+  const [sarees, setSarees] = useState<Saree[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [refreshSales, setRefreshSales] = useState(0);
+  const [refreshInvestment, setRefreshInvestment] = useState(0);
   const [session, setSession] = useState<any>(null);
-  const [editingSaree, setEditingSaree] = useState<SareeWithImages | null>(null);
+  const [editingSaree, setEditingSaree] = useState<Saree | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -36,21 +31,14 @@ const Index: React.FC = () => {
     });
   }, []);
 
-  // Fetch sarees and their images
   useEffect(() => {
     if (!session) return;
     const fetchSarees = async () => {
-      setLoading(true);
-      try {
-        const { data: sareeRows, error: sareeError } = await supabase.from("sarees").select("*");
-        if (sareeError) {
-          setErrorMsg(sareeError.message);
-          setLoading(false);
-          return;
-        }
-
-        // Map base sarees
-        const sareesData: SareeWithImages[] = (sareeRows || []).map((s: any) => ({
+      const { data, error } = await supabase.from("sarees").select("*");
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        const formatted = (data || []).map((s: any) => ({
           id: String(s.id),
           name: s.name,
           type: s.type,
@@ -58,63 +46,25 @@ const Index: React.FC = () => {
           quantity: s.quantity,
           imageUrl: s.image_url || "",
           tags: s.tags ? (typeof s.tags === "string" ? s.tags.split(",") : s.tags) : [],
-          images: [], // will fill from saree_images
+          description: s.description ?? null,
         }));
-
-        // If there are sarees, fetch their images in one query
-        const sareeIds = sareesData.map((s) => Number(s.id));
-        if (sareeIds.length > 0) {
-          const { data: imagesRows, error: imagesError } = await supabase
-            .from("saree_images")
-            .select("saree_id, image_url")
-            .in("saree_id", sareeIds);
-
-          if (imagesError) {
-            console.warn("Failed to fetch saree images:", imagesError);
-            // fallback: put single imageUrl into images
-            sareesData.forEach((s) => {
-              s.images = s.imageUrl ? [s.imageUrl] : [];
-            });
-          } else {
-            // Group images by saree_id
-            const byId: Record<string, string[]> = {};
-            (imagesRows || []).forEach((r: any) => {
-              const sid = String(r.saree_id);
-              byId[sid] = byId[sid] || [];
-              byId[sid].push(r.image_url);
-            });
-            // Attach images; if none found use main imageUrl if available
-            sareesData.forEach((s) => {
-              s.images = byId[s.id] && byId[s.id].length > 0 ? byId[s.id] : s.imageUrl ? [s.imageUrl] : [];
-            });
-          }
-        }
-
-        setSarees(sareesData);
-      } catch (err: any) {
-        console.error("Error fetching sarees:", err);
-        setErrorMsg(err.message || "Failed to fetch sarees");
-      } finally {
-        setLoading(false);
+        setSarees(formatted);
       }
+      setLoading(false);
     };
     fetchSarees();
   }, [session]);
 
-  // Called after AddSareeForm inserted a new saree (created row returned)
-  const handleAddSaree = (newSaree: SareeWithImages) => {
-    // ensure images array exists
-    const withImages: SareeWithImages = { ...newSaree, images: newSaree.images ?? (newSaree.imageUrl ? [newSaree.imageUrl] : []) };
-    setSarees((prev) => [...prev, withImages]);
+  const handleAddSaree = (newSaree: Saree) => {
+    setSarees((prev) => [...prev, newSaree]);
+    setRefreshInvestment((prev) => prev + 1); // trigger investment summary refresh
   };
 
-  // Sell handler now accepts selectedImageUrl and records it in sales.image_url
   const handleSellSaree = async (
     sareeId: string,
     quantity: number,
     customerName: string,
-    sellingPrice: number,
-    selectedImageUrl?: string | null
+    sellingPrice: number
   ) => {
     const saree = sarees.find((s) => s.id === sareeId);
     if (!saree) return;
@@ -122,63 +72,30 @@ const Index: React.FC = () => {
     const newQty = saree.quantity - quantity;
     const margin = sellingPrice - saree.price;
 
-    try {
-      // Update quantity
-      const maybeNum = Number(sareeId);
-      const eqArg = Number.isNaN(maybeNum) ? sareeId : maybeNum;
-      const { error: updateError } = await supabase.from("sarees").update({ quantity: newQty }).eq("id", eqArg);
-      if (updateError) throw updateError;
+    await supabase.from("sarees").update({ quantity: newQty }).eq("id", parseInt(sareeId, 10));
+    await supabase.from("sales").insert([
+      {
+        saree_id: sareeId,
+        customer_name: customerName,
+        quantity,
+        selling_price: sellingPrice,
+        cost_price: saree.price,
+        margin,
+        type: saree.type,
+        image_url: saree.images?.[0] || saree.imageUrl || null,
+      },
+    ]);
 
-      // Insert sale, including image_url
-      const { error: insertError } = await supabase.from("sales").insert([
-        {
-          saree_id: sareeId,
-          customer_name: customerName,
-          quantity,
-          selling_price: sellingPrice,
-          cost_price: saree.price,
-          margin,
-          type: saree.type,
-          image_url: selectedImageUrl ?? null,
-        },
-      ]);
-      if (insertError) throw insertError;
-
-      // Update local UI
-      setSarees((prev) => prev.map((s) => (s.id === sareeId ? { ...s, quantity: newQty } : s)));
-      setRefreshSales((prev) => prev + 1);
-    } catch (err: any) {
-      console.error("Error during selling saree:", err);
-      alert("Failed to record sale: " + (err.message || err));
-    }
+    setSarees((prev) => prev.map((s) => (s.id === sareeId ? { ...s, quantity: newQty } : s)));
+    setRefreshSales((prev) => prev + 1);
   };
 
-  const handleEditRequest = (s: SareeWithImages) => {
+  const handleEditRequest = (s: Saree) => {
     setEditingSaree(s);
   };
 
   const handleUpdateSaree = (updated: Saree) => {
-    // Ensure id is string and preserve images if updated doesn't include images
-    const updatedId = String(updated.id);
-    setSarees((prev) =>
-      prev.map((p) => {
-        if (p.id !== updatedId) return p;
-        // preserve images from previous state unless updated has them
-        const images = (updated as any).images ?? p.images ?? (p.imageUrl ? [p.imageUrl] : []);
-        const tags = updated.tags ?? p.tags ?? [];
-        return {
-          ...p,
-          id: updatedId,
-          name: updated.name,
-          type: updated.type,
-          price: updated.price,
-          quantity: updated.quantity,
-          imageUrl: (updated as any).imageUrl ?? p.imageUrl,
-          tags,
-          images,
-        };
-      })
-    );
+    setSarees((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     setEditingSaree(null);
   };
 
@@ -186,7 +103,6 @@ const Index: React.FC = () => {
     const confirmed = window.confirm("Delete this saree? This action cannot be undone.");
     if (!confirmed) return;
     try {
-      // try numeric id first if possible
       const maybeNum = Number(id);
       const eqArg = Number.isNaN(maybeNum) ? id : maybeNum;
       const { error } = await supabase.from("sarees").delete().eq("id", eqArg);
@@ -240,13 +156,19 @@ const Index: React.FC = () => {
         {!loading && !errorMsg && (
           <>
             {sarees.some((s) => s.quantity < 5) && <LowStockAlert sarees={sarees} />}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AddSareeForm onAddSaree={handleAddSaree} />
               <SellSareeSection sarees={sarees} onSell={handleSellSaree} />
             </div>
 
-            {/* Inventory grid with edit + delete */}
             <InventoryGrid sarees={sarees} onEdit={handleEditRequest} onDelete={handleDeleteSaree} />
+
+            {/* NEW SUMMARY SECTION */}
+            <InvestmentSalesSummary
+              refreshInvestment={refreshInvestment}
+              refreshSales={refreshSales}
+            />
 
             <RestockSuggestions sarees={sarees} />
             {sarees.length > 0 && <AnalyticsCharts sarees={sarees} />}
